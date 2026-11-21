@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-butter: #FFF099;
+    --surface-peach: #FFE4C4;
+    --surface-skymint: #D9F9FF;
+    --ink-black: #111111;
+    --retro-gold: #FFD60A;
+    --retro-coral: #FF3B5C;
+    --retro-cyan: #00C2FF;
+    --retro-mint: #2EE59D;
+  }
+
+  body {
+    background-color: #FFF099;
+    background-image:
+      radial-gradient(#E0B200 1.75px, transparent 1.75px),
+      linear-gradient(to right, rgba(17, 17, 17, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(17, 17, 17, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px, 40px 40px, 40px 40px;
+    color: #111111;
+    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  [role="tab"] {
+    touch-action: manipulation;
+  }
+}
+
+.font-display {
+  font-family: "Archivo", sans-serif;
+}
+
+.font-mono-retro {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+.retro-shadow {
+  box-shadow: 5px 5px 0px #111111;
+}
+
+.retro-shadow-sm {
+  box-shadow: 3px 3px 0px #111111;
+}
+
+.retro-btn {
+  touch-action: manipulation;
+  border: 3px solid #111111;
+  box-shadow: 4px 4px 0px #111111;
+  transition: transform 110ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 110ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 110ms ease;
+}
+
+.retro-btn:hover:not(:disabled) {
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: 6px 6px 0px #111111;
+}
+
+.retro-btn:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0px #111111;
+}
+
+.retro-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.holo-sheen {
+  background: linear-gradient(
+    125deg,
+    #FFD60A 0%,
+    #FF8A00 24%,
+    #FF3B5C 50%,
+    #00C2FF 76%,
+    #2EE59D 100%
+  );
+}
+
+@keyframes holo-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+  }
+}
+
+.holo-card-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 214, 10, 0.24) 38%,
+    rgba(0, 194, 255, 0.26) 50%,
+    rgba(255, 59, 92, 0.22) 62%,
+    transparent 80%
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  animation: holo-sweep 4.5s ease-in-out infinite;
+}
+
+@keyframes retro-pulse-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-retro-float {
+  animation: retro-pulse-float 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retro-btn {
+    transition: none;
+  }
+  .holo-card-overlay::after,
+  .animate-retro-float {
+    animation: none;
+  }
+}

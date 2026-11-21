@@ -1,0 +1,10 @@
+{
+  "name": "VibeCheck 3000",
+  "description": "Analyze your vibe from a photo and generate a retro 1990s cartoon doodle caricature.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
