@@ -31,6 +31,39 @@ const FIRST_FLUSH_PADDING = " ".repeat(2048);
 
 const bootedAt = Date.now();
 
+const SAMPLE_FILES_BY_ID: Record<string, string> = {
+  "peace-sign": "solo-peace-sign.jpg",
+  "thinking-pose": "solo-thinking-pose.jpg",
+  "big-laugh": "solo-big-laugh.jpg",
+  "cool-sunglasses": "solo-cool-sunglasses.jpg",
+  "crossed-arms": "solo-crossed-arms.jpg",
+  "hackathon-windbreaker": "solo-hackathon-windbreaker.jpg",
+  "duo-peace-shades": "duo-peace-and-shades.jpg",
+  "duo-smirk-laugh": "duo-smirk-and-laugh.jpg",
+};
+
+function buildFallbackSampleDataUrl(sampleId: string): string {
+  const safeLabel = sampleId.replace(/[^a-z0-9-]/gi, "").toUpperCase() || "SAMPLE";
+  const isDuo = sampleId.startsWith("duo-");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="384" viewBox="0 0 512 384">
+  <rect width="512" height="384" fill="#FFF099"/>
+  <rect x="16" y="16" width="480" height="352" fill="#FFE4C4" stroke="#111111" stroke-width="6"/>
+  <circle cx="${isDuo ? 176 : 256}" cy="156" r="56" fill="#00C2FF" stroke="#111111" stroke-width="5"/>
+  <circle cx="${isDuo ? 176 : 256}" cy="144" r="24" fill="#FFD60A" stroke="#111111" stroke-width="4"/>
+  <path d="M${isDuo ? 136 : 216} 214 C${isDuo ? 136 : 216} 182 ${isDuo ? 216 : 296} 182 ${isDuo ? 216 : 296} 214" fill="#FF3B5C" stroke="#111111" stroke-width="4"/>
+  ${
+    isDuo
+      ? `<circle cx="336" cy="156" r="56" fill="#2EE59D" stroke="#111111" stroke-width="5"/>
+  <circle cx="336" cy="144" r="24" fill="#FFD60A" stroke="#111111" stroke-width="4"/>
+  <path d="M296 214 C296 182 376 182 376 214" fill="#FF3B5C" stroke="#111111" stroke-width="4"/>`
+      : ""
+  }
+  <rect x="88" y="276" width="336" height="52" fill="#FFD60A" stroke="#111111" stroke-width="4"/>
+  <text x="256" y="309" text-anchor="middle" font-family="monospace" font-weight="700" font-size="20" fill="#111111">${safeLabel}</text>
+</svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
+}
+
 type WorkContext = {
   onStatus: (msg: string) => void;
   signal: AbortSignal;
@@ -138,6 +171,41 @@ async function startServer() {
       geminiConfigured: isGeminiConfigured(),
       models: getModelHealth(),
     });
+  });
+
+  app.get("/api/sample/:id", async (req, res) => {
+    const sampleId = typeof req.params.id === "string" ? req.params.id.trim() : "";
+    if (!Object.prototype.hasOwnProperty.call(SAMPLE_FILES_BY_ID, sampleId)) {
+      res.status(404).json({ error: "Unknown sample ID." });
+      return;
+    }
+
+    const filename = SAMPLE_FILES_BY_ID[sampleId];
+    const candidateDirs = [
+      path.resolve(__dirname, "src", "assets", "samples"),
+      path.resolve(__dirname, "dist", "src", "assets", "samples"),
+    ];
+
+    res.setHeader("Cache-Control", "public, max-age=3600");
+
+    for (const baseDir of candidateDirs) {
+      const resolvedPath = path.resolve(baseDir, filename);
+      if (!resolvedPath.startsWith(baseDir + path.sep)) {
+        continue;
+      }
+      try {
+        const fileBuffer = await fs.promises.readFile(resolvedPath);
+        if (fileBuffer.length > 0) {
+          res.json({ dataUrl: `data:image/jpeg;base64,${fileBuffer.toString("base64")}` });
+          return;
+        }
+      } catch {
+        // Fall through to check fallback dir or generate inline fallback.
+      }
+    }
+
+    console.warn(`[Sample API] Missing sample file on disk for '${sampleId}', serving fallback dataUrl.`);
+    res.json({ dataUrl: buildFallbackSampleDataUrl(sampleId) });
   });
 
   app.post("/api/analyze-vibe", async (req, res) => {

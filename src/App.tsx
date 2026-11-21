@@ -4,6 +4,7 @@ import { TopOsBar } from "./components/TopOsBar";
 import { VibeCardPanel } from "./components/VibeCardPanel";
 import {
   createSampleShuffler,
+  getSampleApiUrl,
   nextDuoIndex,
   SAMPLE_PRESETS,
 } from "./data/samplePresets";
@@ -62,7 +63,24 @@ export default function App() {
     setCaptureTab("sample");
     setIsLoadingSample(true);
     try {
-      const base64 = await urlToBase64(preset.url);
+      let base64: string;
+      try {
+        const res = await fetch(getSampleApiUrl(preset.id), { cache: "force-cache" });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const payload = (await res.json()) as { dataUrl?: unknown };
+        if (typeof payload?.dataUrl !== "string" || !payload.dataUrl.startsWith("data:image/")) {
+          throw new Error("Invalid sample payload from server.");
+        }
+        base64 = payload.dataUrl.startsWith("data:image/svg+xml")
+          ? await urlToBase64(payload.dataUrl)
+          : payload.dataUrl;
+      } catch (apiErr) {
+        console.warn("[Sample Loader] /api/sample failed, falling back to Vite asset:", apiErr);
+        base64 = await urlToBase64(preset.url);
+      }
+
       if (sampleRequestIdRef.current !== requestId) return;
       setSampleIndex(idx);
       setCapturedImage(base64);

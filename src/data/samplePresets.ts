@@ -1,15 +1,15 @@
 /**
- * Built-in sample portraits.
+ * Built-in sample portraits (6 solo + 2 duo = 8 presets).
  *
- * Every image is imported through Vite, so it is fingerprinted and served from
- * the app's OWN origin (dev: Vite middleware, prod: express.static(dist)).
- * Same-origin pixels never taint a <canvas>, so converting them to base64 for
- * Gemini can't hit CORS — online, offline, inside the AI Studio iframe or on
- * the deployed Cloud Run URL. No third-party hosts, no proxy needed.
+ * Primary load goes through Express `GET /api/sample/:id`, which reads the
+ * JPEG bytes straight from `src/assets/samples/` on disk and returns a cached,
+ * pre-encoded `data:image/jpeg;base64,...` payload — zero Vite asset-path or
+ * CORS issues online, offline, inside the AI Studio iframe, or on Cloud Run.
  *
- * All portraits are AI-generated people (no real attendees). The two duo
- * presets are split-screen composites of two solo portraits so Co-Op Duo Mode
- * can be demoed in one click.
+ * Each preset also keeps its Vite-imported URL as a secondary same-origin
+ * client fallback. All portraits are AI-generated people (no real attendees).
+ * The two duo presets are split-screen composites of two solo portraits so
+ * Co-Op Duo Mode can be demoed in one click.
  */
 import duoPeaceAndShades from "../assets/samples/duo-peace-and-shades.jpg";
 import duoSmirkAndLaugh from "../assets/samples/duo-smirk-and-laugh.jpg";
@@ -90,4 +90,8 @@ export function nextDuoIndex(currentIndex?: number): number {
     return DUO_PRESET_INDICES[Math.floor(Math.random() * DUO_PRESET_INDICES.length)];
   }
   return DUO_PRESET_INDICES[(pos + 1) % DUO_PRESET_INDICES.length];
+}
+
+export function getSampleApiUrl(sampleId: string): string {
+  return `/api/sample/${encodeURIComponent(sampleId)}`;
 }
